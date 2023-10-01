@@ -12,11 +12,15 @@ def start_tracking():
         dept = input("Department (e.g., COMM): ")
         course = input("Course (e.g., 393): ")
         section = input("Section (e.g., 101): ")
+        check_restricted = input("Do you want to check both general and restricted seats? (yes/no): ").lower()
 
-        if (dept, course, section) in tracked_courses:
+        while check_restricted not in ["yes", "no"]:
+            check_restricted = input("Invalid input. Please enter 'yes' or 'no': ").lower()
+
+        if (dept, course, section, check_restricted) in tracked_courses:
             print("This course is already being tracked.")
         else:
-            tracked_courses.append((dept, course, section))
+            tracked_courses.append((dept, course, section, check_restricted))
             print("Course added to tracking list.")
         
         print("Current tracking list: ")
@@ -32,9 +36,13 @@ def stop_tracking():
         dept = input("Department (e.g., COMM): ")
         course = input("Course (e.g., 393): ")
         section = input("Section (e.g., 101): ")
+        check_restricted = input("Are you tracking both general and restricted seats? (yes/no): ").lower()
+        
+        while check_restricted not in ["yes", "no"]:
+            check_restricted = input("Invalid input. Please enter 'yes' or 'no': ").lower()
 
-        if (dept, course, section) in tracked_courses:
-            tracked_courses.remove((dept, course, section))
+        if (dept, course, section, check_restricted) in tracked_courses:
+            tracked_courses.remove((dept, course, section, check_restricted))
             print("Course removed from tracking list.")
         else:
             print("This course is not being tracked.")
@@ -46,7 +54,7 @@ def stop_tracking():
         keep_removing = input("Do you want to stop tracking another course? (yes/no): ")
 
 # Function to scrape course availability
-def scrape_course_availability(dept, course, section):
+def scrape_course_availability(dept, course, section, check_restricted):
     url = f"https://courses.students.ubc.ca/cs/courseschedule?pname=subjarea&tname=subj-section&dept={dept}&course={course}&section={section}"
 
     response = requests.get(url)
@@ -59,18 +67,18 @@ def scrape_course_availability(dept, course, section):
             general = int(strong[len(strong)-2].text)
             restricted = int(strong[len(strong)-1].text)
 
-            if general > 0 or restricted > 0:
+            if (general > 0 or (check_restricted == "yes" and restricted > 0)):
                 title = "Course Available"
                 message = f"A seat is available for {dept} {course} {section}!"
                 send_notification(title, message)
-                tracked_courses.remove((dept, course, section))
-        
+                tracked_courses.remove((dept, course, section, check_restricted))
+
         else:
             print("Course not found.")
-            tracked_courses.remove((dept, course, section))
+            tracked_courses.remove((dept, course, section, check_restricted))
     else:
         print("Failed to retrieve course information. Status code:", response.status_code)
-        tracked_courses.remove((dept, course, section))
+        tracked_courses.remove((dept, course, section, check_restricted))
 
 # Function to send a desktop notification
 def send_notification(title, message):
@@ -83,7 +91,7 @@ if __name__ == "__main__":
         
     while len(tracked_courses) > 0:
         for course in tracked_courses:
-            scrape_course_availability(course[0], course[1], course[2])
+            scrape_course_availability(course[0], course[1], course[2], course[3])
 
         stop_tracking_option = input("Do you want to stop tracking any courses? (yes/no): ")
         if stop_tracking_option.lower() == "yes":
