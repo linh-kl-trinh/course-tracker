@@ -1,1 +1,3 @@
-# course-tracker
+# Course Tracker
+
+A Python script designed to help students track the availability of specific courses at UBC. It allows users to input course details (department, course number, and section) they wish to monitor for available seats. Users have the flexibility to choose between tracking general seats only or both general and restricted seats. The script periodically scrapes UBC's course schedule website and sends desktop notifications if a seat becomes available for any of the tracked courses. The script runs continuously until the user manually stops it or until there are no more courses left to track. 
